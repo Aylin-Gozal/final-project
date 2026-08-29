@@ -1,38 +1,37 @@
 const StoreApi = {
-  headers() {
-    const token = localStorage.getItem('authToken');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  },
+  token() { return localStorage.getItem('authToken'); },
+  user() { try { return JSON.parse(localStorage.getItem('currentUser')); } catch (_) { return null; } },
+  saveAuth(data) { localStorage.setItem('authToken', data.token); localStorage.setItem('currentUser', JSON.stringify(data.user)); },
+  logout() { localStorage.removeItem('authToken'); localStorage.removeItem('currentUser'); },
   async request(path, options = {}) {
-    const response = await fetch(path, {
-      ...options,
-      headers: { ...(options.skipAuth ? {} : this.headers()), ...(options.headers || {}) }
-    });
-    if (!response.ok) throw new Error((await response.text()) || 'Request failed');
+    const headers = { ...(options.headers || {}) };
+    if (this.token()) headers.Authorization = `Bearer ${this.token()}`;
+    const response = await fetch(path, { ...options, headers });
+    if (response.status === 401 && !options.publicRequest) this.logout();
+    if (!response.ok) {
+      let message = 'Request failed';
+      try { const body = await response.json(); message = body.message || message; } catch (_) { message = (await response.text()) || message; }
+      throw new Error(message);
+    }
     if (response.status === 204) return null;
     const type = response.headers.get('content-type') || '';
     return type.includes('application/json') ? response.json() : response.text();
   },
-  productFromApi(product) {
-    return {
-      id: product.id, name: product.title, brand: product.title, model: '', author: product.author,
-      category: product.category || product.author || 'Uncategorized', description: product.description || '',
-      price: product.price, rating: product.rating || 0, image: product.image || 'placeholder.jpg'
-    };
-  },
-  productPayload(product) {
-    return {
-      title: product.brand || product.name,
-      author: product.category || 'General', price: Number(product.price),
-      category: product.category, description: product.description, image: product.image,
-      rating: Number(product.rating) || 0
-    };
-  },
-  async products() {
-    const page = await this.request('/api/products?size=100');
-    return page.content.map(this.productFromApi);
-  },
-  createProduct(product) { return this.request('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(this.productPayload(product)) }); },
-  updateProduct(id, product) { return this.request(`/api/products/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(this.productPayload(product)) }); },
-  deleteProduct(id) { return this.request(`/api/products/${id}`, { method: 'DELETE' }); }
+  products(params = '') { return this.request(`/api/products${params}`, { publicRequest: true }); },
+  product(id) { return this.request(`/api/products/${id}`, { publicRequest: true }); },
+  async upload(file) { const body = new FormData(); body.append('file', file); return this.request('/api/uploads/images', { method: 'POST', body }); }
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+  const user = StoreApi.user();
+  document.querySelectorAll('nav a[href="create account.html"]').forEach(link => {
+    const navItem = link.closest('.nav-item');
+    (navItem || link).style.display = user ? 'none' : '';
+  });
+  document.querySelectorAll('#usernameDisplay').forEach(el => el.textContent = user ? user.username : '');
+  document.querySelectorAll('#loginBtn').forEach(el => el.style.display = user ? 'none' : 'inline-block');
+  document.querySelectorAll('#logoutBtn').forEach(el => {
+    el.style.display = user ? 'inline-block' : 'none';
+    el.onclick = event => { event.preventDefault(); StoreApi.logout(); window.location.href = 'home.html'; };
+  });
+});
