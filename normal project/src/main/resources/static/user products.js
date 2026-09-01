@@ -1,16 +1,3 @@
-document.addEventListener('DOMContentLoaded', async () => {
-  const body = document.getElementById('productTableBody');
-  const empty = document.getElementById('noProductsMessage');
-  if (!localStorage.getItem('authToken')) { empty.style.display = 'block'; return; }
-  try {
-    const products = await StoreApi.products();
-    empty.style.display = products.length ? 'none' : 'block';
-    products.forEach(product => {
-      const row = document.createElement('tr');
-      row.innerHTML = `<td>${product.brand}</td><td>${product.category}</td><td><img src="${product.image}" alt="Product Image" style="height: 60px;"></td><td>$${Number(product.price).toFixed(2)}</td><td><div class="stars">${'★'.repeat(product.rating)}${'☆'.repeat(5 - product.rating)}</div></td><td><button class="btn btn-sm btn-warning me-2 edit-btn">Edit</button><button class="btn btn-sm btn-danger delete-btn">Delete</button></td>`;
-      row.querySelector('.edit-btn').addEventListener('click', () => { localStorage.setItem('editingProduct', JSON.stringify(product)); window.location.href = 'edit product.html'; });
-      row.querySelector('.delete-btn').addEventListener('click', async () => { if (!confirm('Delete this product?')) return; await StoreApi.deleteProduct(product.id); row.remove(); });
-      body.appendChild(row);
-    });
-  } catch (error) { alert(error.message); }
+document.addEventListener('DOMContentLoaded',async()=>{
+ if(StoreApi.user()?.role!=='SELLER'){location.href='shop.html';return;}try{const products=await StoreApi.request('/api/products/my');noProductsMessage.style.display=products.length?'none':'block';products.forEach(p=>{const row=document.createElement('tr');row.innerHTML=`<td>${p.brand} ${p.model}</td><td>${p.category}</td><td><img src="${p.imageUrl}" alt="" style="height:60px"></td><td>$${p.price.toFixed(2)}</td><td>${'★'.repeat(p.rating)}</td><td><button class="btn btn-warning btn-sm edit">Edit</button> <button class="btn btn-danger btn-sm del">Delete</button></td>`;row.querySelector('.edit').onclick=()=>location.href=`edit product.html?id=${p.id}`;row.querySelector('.del').onclick=async()=>{if(confirm('Delete this product?')){try{await StoreApi.request(`/api/products/${p.id}`,{method:'DELETE'});row.remove();}catch(e){alert(e.message);}}};productTableBody.appendChild(row);});}catch(e){alert(e.message);}
 });

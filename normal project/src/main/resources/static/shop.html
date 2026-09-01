@@ -70,14 +70,20 @@
                     <li><h4><a href="#" class="text-decoration-none text-dark" data-category="Footwear">Footwear</a></h4></li>
                     <li><h4><a href="#" class="text-decoration-none text-dark" data-category="Accessories">Accessories</a></h4></li>
                     <li><h4><a href="#" class="text-decoration-none text-dark" data-category="Tablets">Tablets</a></h4></li>
+                    <li><h4><a href="#" class="text-decoration-none text-dark" data-category="Electronics">Electronics</a></h4></li>
                 </ul>
+                <h2 class="mt-4">Price</h2>
+                <div class="d-flex gap-2 mb-4">
+                    <input type="number" id="minPrice" class="form-control" min="0" step="0.01" placeholder="Min">
+                    <input type="number" id="maxPrice" class="form-control" min="0" step="0.01" placeholder="Max">
+                </div>
                 <h2 class="mt-5">Rate</h2>
                 <div id="starFilters">
-                    <div data-stars="5" class="star">★★★★★</div>
-                    <div data-stars="4" class="star">★★★★☆</div>
-                    <div data-stars="3" class="star">★★★☆☆</div>
-                    <div data-stars="2" class="star">★★☆☆☆</div>
-                    <div data-stars="1" class="star">★☆☆☆☆</div>
+                    <div data-stars="5" class="star" role="button">★★★★★</div>
+                    <div data-stars="4" class="star" role="button">★★★★☆ & up</div>
+                    <div data-stars="3" class="star" role="button">★★★☆☆ & up</div>
+                    <div data-stars="2" class="star" role="button">★★☆☆☆ & up</div>
+                    <div data-stars="1" class="star" role="button">★☆☆☆☆ & up</div>
                 </div>
             </div>
 
